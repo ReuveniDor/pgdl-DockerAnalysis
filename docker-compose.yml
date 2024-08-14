@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+  nb:
+    build:
+      context: nb
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    networks:
+      - argmax
+    depends_on:
+      - emb
+
+  emb:
+    build:
+      context: emb
+      dockerfile: Dockerfile
+    environment:
+      MODEL_NAME: mixedbread-ai/mxbai-embed-large-v1
+      MODEL_DIM: 1024
+      BATCH_SIZE: 16
+      DB_URL: postgresql://postgres:argmax@pg:5432/postgres
+      EMBED_FREQUENCY: 1
+    ports:
+      - "8080:8080"
+    networks:
+      - argmax
+    depends_on:
+      - pg
+
+  pg:
+    build:
+      context: pg
+      dockerfile: Dockerfile
+    ports:
+      - "5432:5432"
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: argmax
+    networks:
+      - argmax
+
+networks:
+  argmax:
+    driver: bridge
